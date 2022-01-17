@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, redirect
 from google.cloud import compute_v1
+import sys
 
-app = Flask("test")
+
+app = Flask("prj-kloos")
 
 @app.route("/")
 def index():
@@ -57,5 +59,40 @@ def list_all_templates(projekt="prj-kloos"):
     for responce in list:
         templates.append(responce.name)
     return templates
+
+
+def create_instance_form_template(template:str, projekt="prj-kloos"):
+    instance_client = compute_v1.InstancesClient()
+    operation_client = compute_v1.ZoneOperationsClient()
+
+    template_str = "projects/prj-kloos/global/instanceTemplates/" + template
+
+    instance = compute_v1.Instance()
+    name = ""
+    for i in template.split("-")[1:]:
+        name += i
+
+    instance.name = name
+
+    request = compute_v1.InsertInstanceRequest()
+    request.instance_resource = instance
+    request.project = projekt
+    request.source_instance_template = template_str
+    request.zone = "europe-west3-b"
+
+
+    operation = instance_client.insert_unary(request=request)
+    while operation.status != compute_v1.Operation.Status.DONE:
+        operation = operation_client.wait(
+            operation=operation.name, zone="europe-west3-b", project="prj-kloos"
+        )
+    if operation.error:
+        print("Error during creation:", operation.error, file=sys.stderr)
+    if operation.warnings:
+        print("Warning during creation:", operation.warnings, file=sys.stderr)
+    print(f"Instance {instance.name} created.")
+    return(instance)
+
+#create_instance_form_template(template="template-prj-kloos-jupyter-spark", projekt="prj-kloos")
 
 app.run(debug=True)
