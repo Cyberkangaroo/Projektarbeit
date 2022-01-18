@@ -1,7 +1,17 @@
 <!DOCTYPE html>
-    <form action='login' method='POST'>
-        <input type='text' name='name' id='name' placeholder='Name'/>
-        <input type='password' name='password' id='password' placeholder='password'/>
-        <input type='submit' name='submit'/>
-    </form>
+{% extends "layout.html" %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <div class="login">
+        <form action='login' method='POST'>
+            <input type='text' name='name' id='name' placeholder='Name'/>
+            <input type='password' name='password' id='password' placeholder='password'/>
+            <input type='submit' name='submit'/>
+        </form>
+    </div>
+{% endblock %}
+
 </html>

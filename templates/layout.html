@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta name="Author" content="Jonas Kloos">
+    <meta name="descripton" content="Projekt Kloos">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Projekt Kloos</title>
+    {% endblock %}
+</head>
+<body>
+    <div class="content">{% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

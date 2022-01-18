@@ -1,5 +1,13 @@
 <!DOCTYPE html>
-    <div class="register">
+{% extends "layout.html" %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+
+
+{% block content %}
+	<div class="register">
 			<h1>Registrieren</h1>
 			<form action="{{ url_for('register') }}" method="post" autocomplete="off" class="login_form">
 				<label for="username">
@@ -13,5 +21,6 @@
 				<div class="msg">{{ msg }}</div>
 				<input type="submit" value="Registrieren" class="register_button">
 			</form>
-		</div>
+	</div>
+{% endblock %}
 </html>

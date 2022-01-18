@@ -1,16 +1,26 @@
 <!DOCTYPE html>
-<form method="post" action="/machines">
-    <table>
-        <tr>
-            <th>Maschine</th>
-        </tr>
-        <tr>
-            {% for m in machines %}
-            <td>{{m}} <input type="submit" name="vm_erstellen" value="VM erstellen"></td>
-            {% endfor %}
-        </tr>
-    </table>
-</form>
+{% extends "layout.html" %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="maschines">
+    <form method="post" action="/machines">
+        <table>
+            <tr>
+                <th>Maschine</th>
+            </tr>
+            <tr>
+                {% for m in machines %}
+                <td>{{m}}</td>
+                {% endfor %}
+            </tr>
+        </table>
+    </form>
+</div>
+{% endblock %}
+
 
 
 
