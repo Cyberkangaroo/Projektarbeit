@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+    <div class="register">
+			<h1>Registrieren</h1>
+			<form action="{{ url_for('register') }}" method="post" autocomplete="off" class="login_form">
+				<label for="username">
+					<i class="fas fa-user"></i>
+				</label>
+				<input type="text" name="username" placeholder="Benutzername" id="username" required>
+				<label for="password">
+					<i class="fas fa-lock"></i>
+				</label>
+				<input type="password" name="password" placeholder="Passwort" id="password" required>
+				<div class="msg">{{ msg }}</div>
+				<input type="submit" value="Registrieren" class="register_button">
+			</form>
+		</div>
+</html>

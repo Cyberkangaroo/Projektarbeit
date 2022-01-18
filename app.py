@@ -3,6 +3,8 @@ import flask_login
 from google.cloud import compute_v1
 import sqlite3
 import sys
+import hashlib
+import os
 
 
 app = Flask(__name__)
@@ -56,15 +58,15 @@ def request_loader(request):
 
 
 
-@app.route('/test')
-def test():
-    conn = db_connection()
-    cursor = conn.execute("SELECT * FROM user")
-    user = [
-        dict(name=row[0], password=row[1]) for row in cursor.fetchall()
-    ]
-    if user is not None:
-        return jsonify(user)
+# @app.route('/test')
+# def test():
+#     conn = db_connection()
+#     cursor = conn.execute("SELECT * FROM user")
+#     user = [
+#         dict(name=row[0], password=row[1]) for row in cursor.fetchall()
+#     ]
+#     if user is not None:
+#         return jsonify(user)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -75,11 +77,21 @@ def login():
     conn = db_connection()
     cursor = conn.execute('SELECT * FROM user WHERE name=?', (request.form['name'],))
     users = [
-        dict(name=row[0], password=row[1]) for row in cursor.fetchall()
+        dict(name=row[0], password=row[1], salt=row[2]) for row in cursor.fetchall()
     ]
 
     name = request.form['name']
-    if request.form['password'] == users[0]['password']:
+    password = request.form['password']
+
+    key = hashlib.pbkdf2_hmac(
+        'sha256',  # The hash digest algorithm for HMAC
+        password.encode('utf-8'),  # Convert the password to bytes
+        users[0]['salt'],  # Provide the salt
+        100000,  # It is recommended to use at least 100,000 iterations of SHA-256
+        dklen=128  # Get a 128 byte key
+    )
+
+    if key == users[0]['password']:
         user = User()
         user.id = name
         flask_login.login_user(user)
@@ -100,36 +112,72 @@ def logout():
     return 'Logged out'
 
 
+
+
 @login_manager.unauthorized_handler
 def unauthorized_handler():
     return redirect(url_for('login'))
 
-# @login_manager.user_loader
-# def load_user(user_id):
-#     return User.get(user_id)
-#
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     # Here we use a class of some kind to represent and validate our
-#     # client-side form data. For example, WTForms is a library that will
-#     # handle this for us, and we use a custom LoginForm to validate.
-#     form = LoginForm()
-#     if form.validate_on_submit():
-#         # Login and validate the user.
-#         # user should be an instance of your `User` class
-#         login_user(user)
-#
-#         flask.flash('Logged in successfully.')
-#
-#         next = request.args.get('next')
-#         # is_safe_url should check if the url is safe for redirects.
-#         # See http://flask.pocoo.org/snippets/62/ for an example.
-#         if not is_safe_url(next):
-#             return flask.abort(400)
-#
-#         return flask.redirect(next or flask.url_for('index'))
-#     return flask.render_template('login.html', form=form)
 
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    msg = ''
+
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'password' in request.form:
+        name = request.form['username']
+        password = request.form['password']
+        msg = createAccount(name, password)
+    elif request.method == 'POST':
+        msg = 'Füll bitte das Formular aus!'
+
+    return render_template('register.html', msg=msg)
+
+
+"""Validiert ob ein Account existiert, wenn nicht erstellt es ihn.
+   Gibt eine passende Fehlermeldung zurück.
+   Generiert zum Passwort einen Salt und Hasht die kombination beider.
+   """
+
+
+def createAccount(name, password):
+    msg = ''
+    conn = db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM user WHERE name=?', (name,))
+    account = cursor.fetchone()
+
+    if account:
+        msg = 'Die Daten gibts leider schon!'
+    elif not name or not password:
+        msg = 'Füll bitte das Formular aus!'
+    else:
+        # Account existiert nicht
+
+        # generiert salt
+        salt = os.urandom(32)
+        key = hashlib.pbkdf2_hmac(
+            'sha256',  # The hash digest algorithm for HMAC
+            password.encode('utf-8'),  # Convert the password to bytes
+            salt,  # Provide the salt
+            100000,  # It is recommended to use at least 100,000 iterations of SHA-256
+            dklen=128  # Get a 128 byte key
+        )
+        cursor.execute('INSERT INTO user(name, password, salt) VALUES (?, ?, ?)',
+                       (name, key, salt,))
+        cursor.close()
+        msg = 'Du wurdest erfolgreich Registriert!'
+    conn.commit()
+    return msg
+
+
+"""Hasht einen angegeben String mit SHA 256.
+    """
+
+
+def hash_sha256(text_string):
+    text_string = hashlib.sha256(text_string.encode()).hexdigest()
+    return text_string
 
 
 @app.route("/")
