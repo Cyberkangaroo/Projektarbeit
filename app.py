@@ -58,16 +58,6 @@ def request_loader(request):
 
 
 
-# @app.route('/test')
-# def test():
-#     conn = db_connection()
-#     cursor = conn.execute("SELECT * FROM user")
-#     user = [
-#         dict(name=row[0], password=row[1]) for row in cursor.fetchall()
-#     ]
-#     if user is not None:
-#         return jsonify(user)
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -187,7 +177,7 @@ def index():
 @app.route("/templates", methods=['GET', 'POST'])
 def template_site():
     if request.method == 'POST':
-
+        create_instance_form_template(request.form.get("vm_erstellen"))
         return request.form.get("vm_erstellen")
         #return redirect("/machines")
     elif request.method == 'GET':
@@ -239,37 +229,41 @@ def list_all_templates(projekt="prj-kloos"):
     return templates
 
 
-# def create_instance_form_template(template:str, projekt="prj-kloos"):
-#     instance_client = compute_v1.InstancesClient()
-#     operation_client = compute_v1.ZoneOperationsClient()
-#
-#     template_str = "projects/prj-kloos/global/instanceTemplates/" + template
-#
-#     instance = compute_v1.Instance()
-#     name = ""
-#     for i in template.split("-")[1:]:
-#         name += i
-#
-#     instance.name = name
-#
-#     request = compute_v1.InsertInstanceRequest()
-#     request.instance_resource = instance
-#     request.project = projekt
-#     request.source_instance_template = template_str
-#     request.zone = "europe-west3-b"
-#
-#
-#     operation = instance_client.insert_unary(request=request)
-#     while operation.status != compute_v1.Operation.Status.DONE:
-#         operation = operation_client.wait(
-#             operation=operation.name, zone="europe-west3-b", project="prj-kloos"
-#         )
-#     if operation.error:
-#         print("Error during creation:", operation.error, file=sys.stderr)
-#     if operation.warnings:
-#         print("Warning during creation:", operation.warnings, file=sys.stderr)
-#     print(f"Instance {instance.name} created.")
-#     return(instance)
+def create_instance_form_template(template:str, projekt="prj-kloos"):
+    instance_client = compute_v1.InstancesClient()
+    operation_client = compute_v1.ZoneOperationsClient()
+
+    template_str = "projects/prj-kloos/global/instanceTemplates/" + template
+
+    instance = compute_v1.Instance()
+    name = ""
+    for i in template.split("-")[1:]:
+        name += i
+
+    name = name + flask_login.current_user.id
+
+    if name not in list_all_instance_names():
+        return
+
+    instance.name = name
+    request = compute_v1.InsertInstanceRequest()
+    request.instance_resource = instance
+    request.project = projekt
+    request.source_instance_template = template_str
+    request.zone = "europe-west3-b"
+
+
+    operation = instance_client.insert_unary(request=request)
+    while operation.status != compute_v1.Operation.Status.DONE:
+        operation = operation_client.wait(
+            operation=operation.name, zone="europe-west3-b", project="prj-kloos"
+        )
+    if operation.error:
+        print("Error during creation:", operation.error, file=sys.stderr)
+    if operation.warnings:
+        print("Warning during creation:", operation.warnings, file=sys.stderr)
+    print(f"Instance {instance.name} created.")
+    return(instance)
 
 
 
