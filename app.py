@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import flask_login
 from google.cloud import compute_v1
+import sqlite3
 import sys
 
 
@@ -9,47 +10,78 @@ login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 app.secret_key = 'super secret string'  # Change this!
 
-users = {'foo@bar.tld': {'password': 'secret'}}
+
+
+def db_connection():
+    conn = None
+    try:
+        conn = sqlite3.connect('user.sqlite')
+    except sqlite3.error as e:
+        print(e)
+    return conn
 
 class User(flask_login.UserMixin):
     pass
 
 
 @login_manager.user_loader
-def user_loader(email):
-    if email not in users:
-        return
-
-    user = User()
-    user.id = email
-    return user
+def user_loader(name):
+    conn = db_connection()
+    cursor = conn.execute("SELECT * FROM user")
+    users = [
+        dict(name=row[0], password=row[1]) for row in cursor.fetchall()
+    ]
+    for u in users:
+        if name == u['name']:
+            user = User()
+            user.id = name
+            return user
+    return
 
 
 @login_manager.request_loader
 def request_loader(request):
-    email = request.form.get('email')
-    if email not in users:
-        return
+    name = request.form.get('name')
+    conn = db_connection()
+    cursor = conn.execute("SELECT * FROM user")
+    users = [
+        dict(name=row[0], password=row[1]) for row in cursor.fetchall()
+    ]
+    for u in users:
+        if name == u['name']:
+            user = User()
+            user.id = name
+            return user
+    return
 
-    user = User()
-    user.id = email
-    return user
+
+
+@app.route('/test')
+def test():
+    conn = db_connection()
+    cursor = conn.execute("SELECT * FROM user")
+    user = [
+        dict(name=row[0], password=row[1]) for row in cursor.fetchall()
+    ]
+    if user is not None:
+        return jsonify(user)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
-        return '''
-               <form action='login' method='POST'>
-                <input type='text' name='email' id='email' placeholder='email'/>
-                <input type='password' name='password' id='password' placeholder='password'/>
-                <input type='submit' name='submit'/>
-               </form>
-               '''
+        return render_template('login.html')
 
-    email = request.form['email']
-    if request.form['password'] == users[email]['password']:
+    conn = db_connection()
+    cursor = conn.execute('SELECT * FROM user WHERE name=?', (request.form['name'],))
+    users = [
+        dict(name=row[0], password=row[1]) for row in cursor.fetchall()
+    ]
+
+    name = request.form['name']
+    if request.form['password'] == users[0]['password']:
         user = User()
-        user.id = email
+        user.id = name
         flask_login.login_user(user)
         return redirect(url_for('protected'))
 
@@ -62,6 +94,7 @@ def protected():
     return 'Logged in as: ' + flask_login.current_user.id
 
 @app.route('/logout')
+@flask_login.login_required
 def logout():
     flask_login.logout_user()
     return 'Logged out'
@@ -69,7 +102,7 @@ def logout():
 
 @login_manager.unauthorized_handler
 def unauthorized_handler():
-    return 'Unauthorized'
+    return redirect(url_for('login'))
 
 # @login_manager.user_loader
 # def load_user(user_id):
