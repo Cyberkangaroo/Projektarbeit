@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for
 import flask_login
 from google.cloud import compute_v1
 import sqlite3
@@ -7,11 +7,18 @@ import hashlib
 import os
 
 
+
+"""App initialisieren"""
+
+
 app = Flask(__name__)
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 app.secret_key = 'super secret string'  # Change this!
 
+
+
+"""Funktion zum erstellen einer Datenbankverbindung"""
 
 
 def db_connection():
@@ -22,8 +29,17 @@ def db_connection():
         print(e)
     return conn
 
+
+
+"""Die User Klasse"""
+
+
 class User(flask_login.UserMixin):
     pass
+
+
+
+"""Funktion zum laden von Usern"""
 
 
 @login_manager.user_loader
@@ -58,6 +74,8 @@ def request_loader(request):
 
 
 
+"""Anzeigefunktion für die Loginseite / Funktion zum Einloggen"""
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -90,10 +108,15 @@ def login():
     return 'Bad login'
 
 
-@app.route('/protected')
-@flask_login.login_required
-def protected():
-    return 'Logged in as: ' + flask_login.current_user.id
+# @app.route('/protected')
+# @flask_login.login_required
+# def protected():
+#     return 'Logged in as: ' + flask_login.current_user.id
+
+
+
+"""Anzeige Funktion für die Logoutseite / Funktion zum ausloggen."""
+
 
 @app.route('/logout')
 @flask_login.login_required
@@ -103,11 +126,18 @@ def logout():
 
 
 
+"""Weiterleitung zur Loginseite, wenn nicht eingelogt."""
+
+
 
 @login_manager.unauthorized_handler
 def unauthorized_handler():
     return redirect(url_for('login'))
 
+
+
+"""Anzeige für die Registerseite.
+   """
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -122,6 +152,7 @@ def register():
         msg = 'Füll bitte das Formular aus!'
 
     return render_template('register.html', msg=msg)
+
 
 
 """Validiert ob ein Account existiert, wenn nicht erstellt es ihn.
@@ -161,8 +192,9 @@ def createAccount(name, password):
     return msg
 
 
+
 """Hasht einen angegeben String mit SHA 256.
-    """
+   """
 
 
 def hash_sha256(text_string):
@@ -170,11 +202,22 @@ def hash_sha256(text_string):
     return text_string
 
 
+
+"""Anzeigefunktion für die Indexseite"""
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
 
+
+
+"""Anzeigefunktion für alle Maschinentemplates.
+   Login: erforderlich"""
+
+
 @app.route("/templates", methods=['GET', 'POST'])
+@flask_login.login_required
 def template_site():
     if request.method == 'POST':
         create_instance_form_template(request.form.get("vm_erstellen"))
@@ -185,7 +228,13 @@ def template_site():
         return render_template("templates.html", templates=templates)
 
 
+
+"""Anzteigefunktion für alle existierenden Maschinen.
+   Login: erforderlich"""
+
+
 @app.route("/machines", methods=['GET', 'POST'])
+@flask_login.login_required
 def machines_site():
     if request.method == 'POST':
         return "test"
@@ -194,6 +243,12 @@ def machines_site():
         return render_template("machines.html", machines=machines)
 
 
+
+"""Funktion zum finden aller Instanzen.
+   Parameter:
+        projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
+   Return: Liste der Instanznamen
+   """
 
 
 def list_all_instance_names(projekt="prj-kloos"):
@@ -210,6 +265,15 @@ def list_all_instance_names(projekt="prj-kloos"):
 
     return names
 
+
+
+"""Funktion zum finden aller Machine-Images.
+   Parameter:
+        projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
+   Return: Liste der Imagenamen
+   """
+
+
 def list_all_images(projekt="prj-kloos"):
     image_client = compute_v1.ImagesClient()
     test_request = compute_v1.ListImagesRequest(project=projekt)
@@ -219,6 +283,15 @@ def list_all_images(projekt="prj-kloos"):
         images.append(responce.name)
     return images
 
+
+
+"""Funktion zum finden aller Machin-Templates.
+   Parameter:
+        projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
+   Return: Liste der Templatenamen
+   """
+
+
 def list_all_templates(projekt="prj-kloos"):
     template_client = compute_v1.InstanceTemplatesClient()
     request = compute_v1.ListInstanceTemplatesRequest(project=projekt)
@@ -227,6 +300,16 @@ def list_all_templates(projekt="prj-kloos"):
     for responce in list:
         templates.append(responce.name)
     return templates
+
+
+
+"""Funktion zum erstellen einer Instanzen.
+   Parameter:
+        template: 
+        template: String, der Name der Vorlage, die verwendet werden soll
+        projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
+   Return: Liste der Instanznamen
+   """
 
 
 def create_instance_form_template(template:str, projekt="prj-kloos"):
