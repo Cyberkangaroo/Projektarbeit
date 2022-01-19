@@ -1,0 +1,180 @@
+.links{
+    max-height: 48px;
+    list-style-type: none;
+    margin: 10px;
+    padding: 10px;
+    background-color: #99BAD8;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.logo{
+    flex-grow: 2;
+    order: 1;
+    min-width: 9%;
+    max-width: 9%;
+}
+
+.menuicon{
+    min-height: 100%;
+    max-height: 80%;
+}
+
+.block{
+    flex-grow: 2;
+    order: 2;
+    text-align: center;
+    min-height: 100%;
+}
+
+.map{
+    width: 100%;
+    height: 100%;
+}
+
+html, body{
+    height: 100%;
+    width: 100%;
+}
+
+
+body {
+    background-color: #e1ebf4;
+    background-position: center;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    margin: 0px;
+}
+
+div.full {
+    height: 100%;
+    width: 100%;
+}
+
+
+div.content{
+    display: flex;
+    align-items: stretch;
+    height: 90%;
+    width: auto;
+    margin: 9px;
+}
+
+.plot {
+    display: flex;
+    width: 100%;
+    height: auto;
+    margin-left: 0px;
+    float: left;
+    margin: 10px;
+    flex-grow: 1;
+    flex-wrap: wrap;
+}
+
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  flex-grow: 1;
+  flex-wrap: wrap;
+}
+
+tr {
+  border: 1pt solid black;
+}
+
+
+tbody {
+   width: 100%;
+}
+
+
+.aktuell {
+    width: 10%;
+    margin: 10px;
+}
+
+.datum_select {
+    margin-left: 9px;
+}
+
+h2 {
+    width: 49%;
+    margin-top: 100px;
+    text-align: center;
+}
+
+.login_form{
+    text-align: center;
+}
+
+h1 {
+    text-align: center;
+}
+
+.active {
+    margin: 10px;
+    text-align: center;
+}
+
+footer {
+    text-align: left;
+    background-color: #e1ebf4;
+    height: 2%;
+    flex-shrink: 0;
+}
+
+
+.adresse {
+    dislay: flex;
+    width: 10%;
+    margin: 10px;
+}
+
+.adresse > tr {
+    border: none;
+}
+
+.tabellen{
+    display: flex;
+    align-items: flex-end;
+}
+
+.content_links{
+    width: 50%;
+    height: 90%
+}
+
+.content_rechts{
+    height: 90%;
+    width: 50%;
+}
+
+.login_button, .register_button {
+    margin-top: 10px;
+}
+
+.favoriten, .login, .register{
+ display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 40%;
+  text-align: center;
+}
+.register{
+ display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 40%;
+  text-align: center;
+}
+
+.speichern_button {
+    margin-top: 1%;
+}
+
+.favoriten_überschrift {
+    margin-left: 25%;
+}

@@ -4,14 +4,21 @@
     {{ super() }}
 {% endblock %}
 
-{% block content %}
+<body>
+    {% block content %}
     <div class="login">
         <form action='login' method='POST'>
-            <input type='text' name='name' id='name' placeholder='Name'/>
-            <input type='password' name='password' id='password' placeholder='password'/>
+            <input type='text' name='name'  placeholder='Name'/>
+            <input type='password' name='password'  placeholder='Passwort'/>
             <input type='submit' name='submit'/>
         </form>
+        <div class="register">
+            <a class="block" title="Registrieren" href="{{ url_for('register') }}" class="active">
+                    <img class="menuicon" src="{{url_for('static', filename='registration.svg')}}" alt="Registrieren">
+            </a>
+        </div>
     </div>
-{% endblock %}
+    {% endblock %}
+</body>
 
 </html>

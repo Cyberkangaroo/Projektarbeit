@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 import flask_login
 from google.cloud import compute_v1
 import sqlite3
@@ -103,9 +103,10 @@ def login():
         user = User()
         user.id = name
         flask_login.login_user(user)
-        return redirect(url_for('protected'))
+        return redirect(url_for('index'))
 
-    return 'Bad login'
+
+    return "Bad login"
 
 
 # @app.route('/protected')
@@ -119,10 +120,9 @@ def login():
 
 
 @app.route('/logout')
-@flask_login.login_required
 def logout():
     flask_login.logout_user()
-    return 'Logged out'
+    return render_template('logout.html')
 
 
 
@@ -203,10 +203,12 @@ def hash_sha256(text_string):
 
 
 
-"""Anzeigefunktion für die Indexseite"""
+"""Anzeigefunktion für die Indexseite.
+   Login: Erforderlich"""
 
 
 @app.route("/")
+@flask_login.login_required
 def index():
     return render_template("index.html")
 
