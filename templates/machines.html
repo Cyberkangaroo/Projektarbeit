@@ -9,11 +9,11 @@
     <form method="post" action="/machines">
         <table>
             <tr>
-                <th>Maschine</th>
+                <th>Maschine</th><th>Externe Ip</th>
             </tr>
             <tr>
                 {% for m in machines %}
-                <td>{{m}}</td>
+                <td>{{m["name"]}}</td><td>{{m["ip"]}}</td><td><input type="button" name="starten" value="Starten"></td><td><input type="button" name="stoppen" value="Stoppen"></td>
                 {% endfor %}
             </tr>
         </table>

@@ -85,6 +85,12 @@ tr {
   border: 1pt solid black;
 }
 
+td {
+    display: table-cell;
+    vertical-align: inherit;
+    border: 1px solid black;
+
+}
 
 tbody {
    width: 100%;

@@ -193,13 +193,13 @@ def createAccount(name, password):
 
 
 
-"""Hasht einen angegeben String mit SHA 256.
-   """
-
-
-def hash_sha256(text_string):
-    text_string = hashlib.sha256(text_string.encode()).hexdigest()
-    return text_string
+# """Hasht einen angegeben String mit SHA 256.
+#    """
+#
+#
+# def hash_sha256(text_string):
+#     text_string = hashlib.sha256(text_string.encode()).hexdigest()
+#     return text_string
 
 
 
@@ -257,15 +257,20 @@ def list_all_instance_names(projekt="prj-kloos"):
     instance_client = compute_v1.InstancesClient()
     request = compute_v1.AggregatedListInstancesRequest(project=projekt)
     agg_list = instance_client.aggregated_list(request=request)
-
+    machines = []
     names = []
+    ips = []
     for zone, response in agg_list:
         if response.instances:
             # all_instances[zone] = response.instances
             for instance in response.instances:
+                machine = {"name": instance.name, "ip": instance.network_interfaces[0].access_configs[0].nat_i_p}
                 names.append(instance.name)
+                ips.append(instance.network_interfaces[0].access_configs[0].nat_i_p)
+                machines.append(machine)
+                print(instance.network_interfaces[0].access_configs[0].nat_i_p)
 
-    return names
+    return machines
 
 
 
