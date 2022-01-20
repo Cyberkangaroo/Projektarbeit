@@ -244,9 +244,13 @@ def machines_site():
             maschine = [m for m in maschinen if m["name"] == request.form.get("starten")][0]
             start_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
             return redirect(url_for('machines_site'))
-        if "stoppen" in request.form:
+        elif "stoppen" in request.form:
             maschine = [m for m in maschinen if m["name"] == request.form.get("stoppen")][0]
             stop_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
+            return redirect(url_for('machines_site'))
+        elif "löschen" in request.form:
+            maschine = [m for m in maschinen if m["name"] == request.form.get("löschen")][0]
+            delete_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
             return redirect(url_for('machines_site'))
     elif request.method == 'GET':
         machines = list_all_instance_names()
@@ -275,15 +279,15 @@ def list_all_instance_names(projekt="prj-kloos"):
     return machines
 
 
-"""Funktion zum starten einer Instanz
+"""Funktion zum Starten einer Instanz
    Parameter:
         zone: String, die zone in der sich die Instanz befindet
         instance_name: String, der Name der Instanz
-        projekt: String der Name des Projektes(default: prj-kloos)
+        projekt: String der Name des Projektes
         """
 
 
-def start_instance(project_id: str, zone: str, instance_name: str):
+def start_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
     instance_client = compute_v1.InstancesClient()
     op_client = compute_v1.ZoneOperationsClient()
 
@@ -304,7 +308,17 @@ def start_instance(project_id: str, zone: str, instance_name: str):
     #     op = op_client.wait(operation=op.name, zone=zone, project=project_id)
     return
 
-def stop_instance(project_id: str, zone: str, instance_name: str):
+
+
+"""Funktion zum Stoppen einer Instanz
+   Parameter:
+        zone: String, die zone in der sich die Instanz befindet
+        instance_name: String, der Name der Instanz
+        projekt: String der Name des Projektes
+        """
+
+
+def stop_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
     instance_client = compute_v1.InstancesClient()
     op_client = compute_v1.ZoneOperationsClient()
 
@@ -321,6 +335,34 @@ def stop_instance(project_id: str, zone: str, instance_name: str):
         request=start_request
     )
     return
+
+
+"""Funktion zum Löschen einer Instanz
+   Parameter:
+        zone: String, die zone in der sich die Instanz befindet
+        instance_name: String, der Name der Instanz
+        projekt: String der Name des Projektes
+        """
+
+
+def delete_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
+    instance_client = compute_v1.InstancesClient()
+    op_client = compute_v1.ZoneOperationsClient()
+
+    instance = compute_v1.Instance()
+    instance.name = instance_name
+    instance.zone = zone.split("/")[1]
+
+    start_request = compute_v1.types.DeleteInstanceRequest()
+    start_request.instance = instance.name
+    start_request.project = project_id
+    start_request.zone = instance.zone
+
+    instance_client.delete_unary(
+        request=start_request
+    )
+    return
+
 
 
 """Funktion zum finden aller Machine-Images.
