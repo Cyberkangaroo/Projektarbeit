@@ -223,7 +223,8 @@ def index():
 def template_site():
     if request.method == 'POST':
         print(request.form.get("vm_erstellen"))
-        create_instance_form_template(request.form.get("vm_erstellen"))
+        if create_instance_form_template(request.form.get("vm_erstellen")) == "existiert bereits":
+            return "existiert bereits"
         return redirect("/machines")
     elif request.method == 'GET':
         templates = list_all_templates()
@@ -423,8 +424,9 @@ def create_instance_form_template(template:str, projekt="prj-kloos"):
 
     name = name + flask_login.current_user.id
 
-    # if name in list_all_instance_names():
-    #     return
+    for machine in list_all_instance_names():
+        if machine["name"] == name:
+            return "existiert bereits"
 
     instance.name = name
     request = compute_v1.InsertInstanceRequest()
