@@ -15,20 +15,20 @@
             <img class="menuicon" src="{{url_for('static', filename='home.svg')}}" alt="Home">
         </a>
         {% if current_user.is_authenticated %}
-                <a class="block" title="Maschinen" href="{{url_for('machines_site')}}" class="active">
-                    <img class="menuicon" src="{{url_for('static', filename='maschine.svg')}}" alt="Maschinene">
-                </a>
-                <a class="block" title="Templates" href="{{url_for('template_site')}}" class="active">
-                    <img class="menuicon" src="{{url_for('static', filename='templates.svg')}}" alt="Templates">
-                </a>
-                <a class="block" title="Logout" href="{{url_for('logout')}}" class="active">
-                    <img class="menuicon" src="{{url_for('static', filename='logout.svg')}}" alt="Logout">
-                </a>
-            {% else %}
-                <a class="block" title="Login" href="{{ url_for('login') }}" class="active">
-                    <img class="menuicon" src="{{url_for('static', filename='login.svg')}}" alt="Login">
-                </a>
-            {% endif %}
+            <a class="block" title="Maschinen" href="{{url_for('machines_site')}}" class="active">
+                <img class="menuicon" src="{{url_for('static', filename='maschine.svg')}}" alt="Maschinene">
+            </a>
+            <a class="block" title="Templates" href="{{url_for('template_site')}}" class="active">
+                <img class="menuicon" src="{{url_for('static', filename='templates.svg')}}" alt="Templates">
+            </a>
+            <a class="block" title="Logout" href="{{url_for('logout')}}" class="active">
+                <img class="menuicon" src="{{url_for('static', filename='logout.svg')}}" alt="Logout">
+            </a>
+        {% else %}
+            <a class="block" title="Login" href="{{ url_for('login') }}" class="active">
+                <img class="menuicon" src="{{url_for('static', filename='login.svg')}}" alt="Login">
+            </a>
+        {% endif %}
     </div>
     {% endblock %}
     <div class="content">{% block content %}

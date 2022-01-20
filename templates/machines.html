@@ -9,13 +9,18 @@
     <form method="post" action="/machines">
         <table>
             <tr>
-                <th>Maschine</th><th>Externe Ip</th>
+                <th>Maschine</th><th>Externe Ip</th><th>Status</th><th>Zone</th>
             </tr>
-            <tr>
-                {% for m in machines %}
-                <td>{{m["name"]}}</td><td>{{m["ip"]}}</td><td><input type="button" name="starten" value="Starten"></td><td><input type="button" name="stoppen" value="Stoppen"></td>
-                {% endfor %}
-            </tr>
+            {% for m in machines %}
+                <tr>
+                    <td>{{m["name"]}}</td><td>{{m["ip"]}}</td><td>{{m["status"]}}</td><td>{{m["zone"]}}</td>
+                    {% if m["status"] == "TERMINATED" %}
+                    <td><button type="submit" name="starten" value="{{m['name']}}">Starten</button></td>
+                    {% else %}
+                        <td><button type="submit" name="stoppen" value="{{m['name']}}">Stoppen</button</td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
         </table>
     </form>
 </div>
