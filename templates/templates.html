@@ -11,11 +11,11 @@
             <tr>
                 <th>Template</th>
             </tr>
-            <tr>
-                {% for t in templates %}
-                <td>{{t}}</td> <td><button type="submit" name="vm_erstellen" value={{t}}>VM erstellen</button></td>
-                {% endfor %}
-            </tr>
+            {% for t in templates %}
+                <tr>
+                    <td>{{t}}</td> <td><button type="submit" name="vm_erstellen" value={{t}}>VM erstellen</button></td>
+                </tr>
+            {% endfor %}
         </table>
     </form>
 </div>
