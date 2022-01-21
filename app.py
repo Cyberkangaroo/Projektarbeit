@@ -211,10 +211,12 @@ def index():
 @flask_login.login_required
 def template_site():
     if request.method == 'POST':
-        print(request.form.get("vm_erstellen"))
-        if create_instance_form_template(request.form.get("vm_erstellen")) == "existiert bereits":
+        print(request.form.get("template"))
+        if create_instance_form_template(name=request.form.get("name"), template=request.form.get("template")) \
+                == "existiert bereits":
             return "existiert bereits"
         return redirect("/machines")
+        # return request.form.get("name")
     elif request.method == 'GET':
         templates = list_all_templates()
         return render_template("templates.html", templates=templates)
@@ -400,16 +402,13 @@ def list_all_templates(projekt="prj-kloos"):
    """
 
 
-def create_instance_form_template(template: str, projekt="prj-kloos"):
+def create_instance_form_template(name: str, template: str, projekt="prj-kloos"):
     instance_client = compute_v1.InstancesClient()
     operation_client = compute_v1.ZoneOperationsClient()
 
     template_str = "projects/prj-kloos/global/instanceTemplates/" + template
 
     instance = compute_v1.Instance()
-    name = ""
-    for i in template.split("-")[1:]:
-        name += i
 
     name = name + "-" + flask_login.current_user.id
 

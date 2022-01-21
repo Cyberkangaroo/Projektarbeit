@@ -7,16 +7,18 @@
 {% block content %}
 <div class="templates">
     <form method="post" action="/templates">
-        <table>
-            <tr>
-                <th>Template</th>
-            </tr>
+        <p>Bitte eine Vorlage auswählen</p>
             {% for t in templates %}
-                <tr>
-                    <td>{{t}}</td> <td><button type="submit" name="vm_erstellen" value={{t}}>VM erstellen</button></td>
-                </tr>
+                <div>
+                    <input type="radio" name="template" value="{{t}}" id="{{t}}">
+                    <label for="{{t}}">{{t}}</label>
+                </div>
             {% endfor %}
-        </table>
+            <div>
+                <p>Bitte einen Namen eingeben (Die Benutzerkennung wird automatisch angehangen)</p>
+                <input type="text" name="name" id="name" placeholder="VM Name">
+                <button type="submit" name="vm_errstellen" value="VM Erstellen">VM Erstellen</button>
+            </div>
     </form>
 </div>
 {% endblock %}
