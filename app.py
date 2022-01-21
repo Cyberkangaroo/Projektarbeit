@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for
 import flask_login
 from google.cloud import compute_v1
 import sqlite3
@@ -144,7 +144,7 @@ def unauthorized_handler():
 def register():
     msg = ''
 
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'password' in request.form:
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         name = request.form['username']
         password = request.form['password']
         msg = createAccount(name, password)
@@ -162,7 +162,6 @@ def register():
 
 
 def createAccount(name, password):
-    msg = ''
     conn = db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM user WHERE name=?', (name,))
@@ -190,16 +189,6 @@ def createAccount(name, password):
         msg = 'Du wurdest erfolgreich Registriert!'
     conn.commit()
     return msg
-
-
-
-# """Hasht einen angegeben String mit SHA 256.
-#    """
-#
-#
-# def hash_sha256(text_string):
-#     text_string = hashlib.sha256(text_string.encode()).hexdigest()
-#     return text_string
 
 
 
@@ -240,7 +229,7 @@ def template_site():
 @flask_login.login_required
 def machines_site():
     if request.method == 'POST':
-        maschinen = list_all_instance_names()
+        maschinen = list_all_instance()
         if "starten" in request.form:
             maschine = [m for m in maschinen if m["name"] == request.form.get("starten")][0]
             start_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
@@ -254,8 +243,9 @@ def machines_site():
             delete_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
             return redirect(url_for('machines_site'))
     elif request.method == 'GET':
-        machines = list_all_instance_names()
-        return render_template("machines.html", machines=machines)
+        machines = list_all_instance()
+        user_mashines = [m for m in machines if m["name"].split("-")[1] == flask_login.current_user.id]
+        return render_template("machines.html", machines=user_mashines)
 
 
 
@@ -266,16 +256,18 @@ def machines_site():
    """
 
 
-def list_all_instance_names(projekt="prj-kloos"):
+def list_all_instance(projekt="prj-kloos"):
     instance_client = compute_v1.InstancesClient()
-    request = compute_v1.AggregatedListInstancesRequest(project=projekt)
-    agg_list = instance_client.aggregated_list(request=request)
+    instance_request = compute_v1.AggregatedListInstancesRequest()
+    instance_request.project = projekt
+    agg_list = instance_client.aggregated_list(request=instance_request)
     machines = []
     for zone, response in agg_list:
         if response.instances:
 
             for instance in response.instances:
-                machine = {"name": instance.name, "ip": instance.network_interfaces[0].access_configs[0].nat_i_p, "status": instance.status, "zone": zone}
+                machine = {"name": instance.name, "ip": instance.network_interfaces[0].access_configs[0].nat_i_p,
+                           "status": instance.status, "zone": zone}
                 machines.append(machine)
     return machines
 
@@ -290,7 +282,6 @@ def list_all_instance_names(projekt="prj-kloos"):
 
 def start_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
     instance_client = compute_v1.InstancesClient()
-    op_client = compute_v1.ZoneOperationsClient()
 
     instance = compute_v1.Instance()
     instance.name = instance_name
@@ -305,8 +296,6 @@ def start_instance(zone: str, instance_name: str, project_id: str = "prj-kloos")
         request=start_request
     )
 
-    # while op.status != compute_v1.Operation.Status.DONE:
-    #     op = op_client.wait(operation=op.name, zone=zone, project=project_id)
     return
 
 
@@ -321,19 +310,18 @@ def start_instance(zone: str, instance_name: str, project_id: str = "prj-kloos")
 
 def stop_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
     instance_client = compute_v1.InstancesClient()
-    op_client = compute_v1.ZoneOperationsClient()
 
     instance = compute_v1.Instance()
     instance.name = instance_name
     instance.zone = zone.split("/")[1]
 
-    start_request = compute_v1.types.StopInstanceRequest()
-    start_request.instance = instance.name
-    start_request.project = project_id
-    start_request.zone = instance.zone
+    stopp_request = compute_v1.types.StopInstanceRequest()
+    stopp_request.instance = instance.name
+    stopp_request.project = project_id
+    stopp_request.zone = instance.zone
 
     instance_client.stop_unary(
-        request=start_request
+        request=stopp_request
     )
     return
 
@@ -348,19 +336,18 @@ def stop_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
 
 def delete_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
     instance_client = compute_v1.InstancesClient()
-    op_client = compute_v1.ZoneOperationsClient()
 
     instance = compute_v1.Instance()
     instance.name = instance_name
     instance.zone = zone.split("/")[1]
 
-    start_request = compute_v1.types.DeleteInstanceRequest()
-    start_request.instance = instance.name
-    start_request.project = project_id
-    start_request.zone = instance.zone
+    delete_request = compute_v1.types.DeleteInstanceRequest()
+    delete_request.instance = instance.name
+    delete_request.project = project_id
+    delete_request.zone = instance.zone
 
     instance_client.delete_unary(
-        request=start_request
+        request=delete_request
     )
     return
 
@@ -375,8 +362,9 @@ def delete_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"
 
 def list_all_images(projekt="prj-kloos"):
     image_client = compute_v1.ImagesClient()
-    test_request = compute_v1.ListImagesRequest(project=projekt)
-    image_list = image_client.list(request=test_request)
+    image_request = compute_v1.ListImagesRequest()
+    image_request.project = projekt
+    image_list = image_client.list(request=image_request)
     images = []
     for responce in image_list:
         images.append(responce.name)
@@ -393,11 +381,12 @@ def list_all_images(projekt="prj-kloos"):
 
 def list_all_templates(projekt="prj-kloos"):
     template_client = compute_v1.InstanceTemplatesClient()
-    request = compute_v1.ListInstanceTemplatesRequest(project=projekt)
-    list = template_client.list(request)
+    template_request = compute_v1.ListInstanceTemplatesRequest()
+    template_request.project = projekt
+    temp_list = template_client.list(template_request)
     templates = []
-    for responce in list:
-        templates.append(responce.name)
+    for response in temp_list:
+        templates.append(response.name)
     return templates
 
 
@@ -411,7 +400,7 @@ def list_all_templates(projekt="prj-kloos"):
    """
 
 
-def create_instance_form_template(template:str, projekt="prj-kloos"):
+def create_instance_form_template(template: str, projekt="prj-kloos"):
     instance_client = compute_v1.InstancesClient()
     operation_client = compute_v1.ZoneOperationsClient()
 
@@ -422,21 +411,20 @@ def create_instance_form_template(template:str, projekt="prj-kloos"):
     for i in template.split("-")[1:]:
         name += i
 
-    name = name + flask_login.current_user.id
+    name = name + "-" + flask_login.current_user.id
 
-    for machine in list_all_instance_names():
+    for machine in list_all_instance():
         if machine["name"] == name:
             return "existiert bereits"
 
     instance.name = name
-    request = compute_v1.InsertInstanceRequest()
-    request.instance_resource = instance
-    request.project = projekt
-    request.source_instance_template = template_str
-    request.zone = "europe-west3-b"
+    create_request = compute_v1.InsertInstanceRequest()
+    create_request.instance_resource = instance
+    create_request.project = projekt
+    create_request.source_instance_template = template_str
+    create_request.zone = "europe-west3-b"
 
-
-    operation = instance_client.insert_unary(request=request)
+    operation = instance_client.insert_unary(request=create_request)
     while operation.status != compute_v1.Operation.Status.DONE:
         operation = operation_client.wait(
             operation=operation.name, zone="europe-west3-b", project="prj-kloos"
@@ -446,7 +434,7 @@ def create_instance_form_template(template:str, projekt="prj-kloos"):
     if operation.warnings:
         print("Warning during creation:", operation.warnings, file=sys.stderr)
     print(f"Instance {instance.name} created.")
-    return(instance)
+    return instance
 
 
 
