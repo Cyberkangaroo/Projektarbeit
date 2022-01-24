@@ -6,10 +6,7 @@ import sys
 import hashlib
 import os
 
-
-
 """App initialisieren"""
-
 
 app = Flask(__name__)
 login_manager = flask_login.LoginManager()
@@ -17,11 +14,9 @@ login_manager.init_app(app)
 app.secret_key = 'super secret string'  # Change this!
 
 
-
-"""Funktion zum erstellen einer Datenbankverbindung"""
-
-
 def db_connection():
+    """Funktion zum erstellen einer Datenbankverbindung"""
+
     conn = None
     try:
         conn = sqlite3.connect('user.sqlite')
@@ -30,20 +25,14 @@ def db_connection():
     return conn
 
 
-
-"""Die User Klasse"""
-
-
 class User(flask_login.UserMixin):
+    """Die User Klasse"""
     pass
-
-
-
-"""Funktion zum laden von Usern"""
 
 
 @login_manager.user_loader
 def user_loader(name):
+    """Funktion zum laden von Usern"""
     conn = db_connection()
     cursor = conn.execute("SELECT * FROM user")
     users = [
@@ -73,12 +62,10 @@ def request_loader(request):
     return
 
 
-
-"""Anzeigefunktion für die Loginseite / Funktion zum Einloggen"""
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Anzeigefunktion für die Loginseite / Funktion zum Einloggen"""
+
     if request.method == 'GET':
         return render_template('login.html')
 
@@ -105,63 +92,46 @@ def login():
         flask_login.login_user(user)
         return redirect(url_for('index'))
 
-
     return "Bad login"
-
-
-# @app.route('/protected')
-# @flask_login.login_required
-# def protected():
-#     return 'Logged in as: ' + flask_login.current_user.id
-
-
-
-"""Anzeige Funktion für die Logoutseite / Funktion zum ausloggen."""
 
 
 @app.route('/logout')
 def logout():
+    """Anzeige Funktion für die Logoutseite / Funktion zum ausloggen."""
+
     flask_login.logout_user()
     return render_template('logout.html')
 
 
-
-"""Weiterleitung zur Loginseite, wenn nicht eingelogt."""
-
-
-
 @login_manager.unauthorized_handler
 def unauthorized_handler():
+    """Weiterleitung zur Loginseite, wenn nicht eingelogt."""
     return redirect(url_for('login'))
-
-
-
-"""Anzeige für die Registerseite.
-   """
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """Anzeigefunktion für die Registerseite.
+       """
+
     msg = ''
 
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         name = request.form['username']
         password = request.form['password']
-        msg = createAccount(name, password)
+        msg = createaccount(name, password)
     elif request.method == 'POST':
         msg = 'Füll bitte das Formular aus!'
 
     return render_template('register.html', msg=msg)
 
 
+def createaccount(name, password):
+    """Validiert ob ein Account existiert, wenn nicht erstellt es ihn.
+       Gibt eine passende Fehlermeldung zurück.
+       Generiert zum Passwort einen Salt und Hasht die kombination beider.
+       """
 
-"""Validiert ob ein Account existiert, wenn nicht erstellt es ihn.
-   Gibt eine passende Fehlermeldung zurück.
-   Generiert zum Passwort einen Salt und Hasht die kombination beider.
-   """
-
-
-def createAccount(name, password):
     conn = db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM user WHERE name=?', (name,))
@@ -191,25 +161,21 @@ def createAccount(name, password):
     return msg
 
 
-
-"""Anzeigefunktion für die Indexseite.
-   Login: Erforderlich"""
-
-
 @app.route("/")
 @flask_login.login_required
 def index():
+    """Anzeigefunktion für die Indexseite.
+       Login: Erforderlich"""
+
     return render_template("index.html")
-
-
-
-"""Anzeigefunktion für alle Maschinentemplates.
-   Login: erforderlich"""
 
 
 @app.route("/templates", methods=['GET', 'POST'])
 @flask_login.login_required
 def template_site():
+    """Anzeigefunktion für alle Maschinentemplates.
+       Login: erforderlich"""
+
     if request.method == 'POST':
         print(request.form.get("template"))
         if create_instance_form_template(name=request.form.get("name"), template=request.form.get("template")) \
@@ -222,14 +188,12 @@ def template_site():
         return render_template("templates.html", templates=templates)
 
 
-
-"""Anzteigefunktion für alle existierenden Maschinen.
-   Login: erforderlich"""
-
-
 @app.route("/machines", methods=['GET', 'POST'])
 @flask_login.login_required
 def machines_site():
+    """Anzteigefunktion für alle existierenden Maschinen.
+       Login: erforderlich"""
+
     if request.method == 'POST':
         maschinen = list_all_instance()
         if "starten" in request.form:
@@ -246,19 +210,17 @@ def machines_site():
             return redirect(url_for('machines_site'))
     elif request.method == 'GET':
         machines = list_all_instance()
-        user_mashines = [m for m in machines if m["name"].split("-")[1] == flask_login.current_user.id]
+        user_mashines = [m for m in machines if m["name"].split("-")[-1] == flask_login.current_user.id]
         return render_template("machines.html", machines=user_mashines)
 
 
-
-"""Funktion zum finden aller Instanzen.
-   Parameter:
-        projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
-   Return: Liste der Instanzen
-   """
-
-
 def list_all_instance(projekt="prj-kloos"):
+    """Funktion zum finden aller Instanzen.
+       Parameter:
+            projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
+       Return: Liste der Instanzen
+       """
+
     instance_client = compute_v1.InstancesClient()
     instance_request = compute_v1.AggregatedListInstancesRequest()
     instance_request.project = projekt
@@ -274,15 +236,13 @@ def list_all_instance(projekt="prj-kloos"):
     return machines
 
 
-"""Funktion zum Starten einer Instanz
-   Parameter:
-        zone: String, die zone in der sich die Instanz befindet
-        instance_name: String, der Name der Instanz
-        projekt: String der Name des Projektes
-        """
-
-
 def start_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
+    """Funktion zum Starten einer Instanz
+       Parameter:
+            zone: String, die zone in der sich die Instanz befindet
+            instance_name: String, der Name der Instanz
+            projekt: String der Name des Projektes
+            """
     instance_client = compute_v1.InstancesClient()
 
     instance = compute_v1.Instance()
@@ -301,16 +261,14 @@ def start_instance(zone: str, instance_name: str, project_id: str = "prj-kloos")
     return
 
 
-
-"""Funktion zum Stoppen einer Instanz
-   Parameter:
-        zone: String, die zone in der sich die Instanz befindet
-        instance_name: String, der Name der Instanz
-        projekt: String der Name des Projektes
-        """
-
-
 def stop_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
+    """Funktion zum Stoppen einer Instanz
+       Parameter:
+            zone: String, die zone in der sich die Instanz befindet
+            instance_name: String, der Name der Instanz
+            projekt: String der Name des Projektes
+            """
+
     instance_client = compute_v1.InstancesClient()
 
     instance = compute_v1.Instance()
@@ -328,15 +286,14 @@ def stop_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
     return
 
 
-"""Funktion zum Löschen einer Instanz
-   Parameter:
-        zone: String, die zone in der sich die Instanz befindet
-        instance_name: String, der Name der Instanz
-        projekt: String der Name des Projektes
-        """
-
-
 def delete_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
+    """Funktion zum Löschen einer Instanz
+       Parameter:
+            zone: String, die zone in der sich die Instanz befindet
+            instance_name: String, der Name der Instanz
+            projekt: String der Name des Projektes
+            """
+
     instance_client = compute_v1.InstancesClient()
 
     instance = compute_v1.Instance()
@@ -354,15 +311,13 @@ def delete_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"
     return
 
 
-
-"""Funktion zum finden aller Machine-Images.
-   Parameter:
-        projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
-   Return: Liste der Imagenamen
-   """
-
-
 def list_all_images(projekt="prj-kloos"):
+    """Funktion zum finden aller Machine-Images.
+       Parameter:
+            projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
+       Return: Liste der Imagenamen
+       """
+
     image_client = compute_v1.ImagesClient()
     image_request = compute_v1.ListImagesRequest()
     image_request.project = projekt
@@ -373,15 +328,13 @@ def list_all_images(projekt="prj-kloos"):
     return images
 
 
-
-"""Funktion zum finden aller Machin-Templates.
-   Parameter:
-        projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
-   Return: Liste der Templatenamen
-   """
-
-
 def list_all_templates(projekt="prj-kloos"):
+    """Funktion zum finden aller Machin-Templates.
+       Parameter:
+            projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
+       Return: Liste der Templatenamen
+       """
+
     template_client = compute_v1.InstanceTemplatesClient()
     template_request = compute_v1.ListInstanceTemplatesRequest()
     template_request.project = projekt
@@ -392,17 +345,15 @@ def list_all_templates(projekt="prj-kloos"):
     return templates
 
 
-
-"""Funktion zum erstellen einer Instanz.
-   Parameter:
-        template: 
-        template: String, der Name der Vorlage, die verwendet werden soll
-        projekt: String, der Name des Projektes in dem erstellt werden soll(default: prj-kloos)
-   Return: Die erstellte instanz
-   """
-
-
 def create_instance_form_template(name: str, template: str, projekt="prj-kloos"):
+    """Funktion zum erstellen einer Instanz.
+       Parameter:
+            template:
+            template: String, der Name der Vorlage, die verwendet werden soll
+            projekt: String, der Name des Projektes in dem erstellt werden soll(default: prj-kloos)
+       Return: Die erstellte instanz
+       """
+
     instance_client = compute_v1.InstancesClient()
     operation_client = compute_v1.ZoneOperationsClient()
 
@@ -434,7 +385,6 @@ def create_instance_form_template(name: str, template: str, projekt="prj-kloos")
         print("Warning during creation:", operation.warnings, file=sys.stderr)
     print(f"Instance {instance.name} created.")
     return instance
-
 
 
 app.run(debug=True)
