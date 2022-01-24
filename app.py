@@ -237,9 +237,9 @@ def list_all_instance(projekt="prj-kloos"):
     instance_request.project = projekt
     agg_list = instance_client.aggregated_list(request=instance_request)
     machines = []
+
     for zone, response in agg_list:
         if response.instances:
-
             for instance in response.instances:
                 machine = {"name": instance.name, "ip": instance.network_interfaces[0].access_configs[0].nat_i_p,
                            "status": instance.status, "zone": zone}
@@ -294,7 +294,7 @@ def start_instance(zone: str, instance_name: str, project_id: str = "prj-kloos")
         request=start_request
     )
 
-    return
+    return redirect("/mashines")
 
 
 def stop_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
@@ -319,7 +319,7 @@ def stop_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
     instance_client.stop_unary(
         request=stopp_request
     )
-    return
+    return redirect("/mashines")
 
 
 def delete_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
@@ -344,7 +344,7 @@ def delete_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"
     instance_client.delete_unary(
         request=delete_request
     )
-    return
+    return redirect("/mashines")
 
 
 def list_all_images(projekt="prj-kloos"):
