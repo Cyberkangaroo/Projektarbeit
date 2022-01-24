@@ -17,10 +17,19 @@
             <div>
                 <p>Bitte einen Namen eingeben (Die Benutzerkennung wird automatisch angehangen)</p>
                 <input type="text" name="name" id="name" placeholder="VM Name">
+                <label for="zone">Zone auswählen:</label>
+                <select name="zone" id="zone">
+                    {% for region in zone_dict.keys() %}
+                        <optgroup label="{{region}}">
+                            {% for zone in zone_dict[region] %}
+                                <option value="{{zone}}">{{zone}}</option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
                 <button type="submit" name="vm_errstellen" value="VM Erstellen">VM Erstellen</button>
             </div>
     </form>
-    <p>{{msg}}</p>
 </div>
 {% endblock %}
 <form method="post" action="/templates">

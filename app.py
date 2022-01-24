@@ -186,6 +186,7 @@ def index():
 def template_site():
     """Anzeigefunktion für alle Maschinentemplates.
        Login: erforderlich"""
+    zone_dict = list_all_zones()
     if request.method == 'POST':
         print(request.form.get("template"))
         if create_instance_form_template(name=request.form.get("name"), template=request.form.get("template")) \
@@ -195,7 +196,7 @@ def template_site():
         # return request.form.get("name")
     elif request.method == 'GET':
         templates = list_all_templates()
-        return render_template("templates.html", templates=templates)
+        return render_template("templates.html", templates=templates, zone_dict=zone_dict)
 
 
 @app.route("/machines", methods=['GET', 'POST'])
@@ -245,6 +246,26 @@ def list_all_instance(projekt="prj-kloos"):
                 machines.append(machine)
     return machines
 
+
+def list_all_zones(projekt:str="prj-kloos"):
+    """Funktion zum auflisten aller Verfügbaren Zonen
+       :parameter: projekt: Das ausgewählte Projekt
+       :returns: Verfügbare Zonen: Dict{List[]}
+       """
+
+    zone_client = compute_v1.ZonesClient()
+    zone_request = compute_v1.ListZonesRequest()
+
+    zone_request.project = projekt
+
+    zone_dict = {}
+    for responce in zone_client.list(zone_request):
+        if responce.name.split("-")[0] not in zone_dict.keys():
+            zone_dict[responce.name.split("-")[0]] = [responce.name]
+        else:
+            zone_dict[responce.name.split("-")[0]].append(responce.name)
+    print(zone_dict)
+    return zone_dict
 
 def start_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
     """Funktion zum Starten einer Instanz
