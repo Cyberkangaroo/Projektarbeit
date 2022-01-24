@@ -1,17 +1,28 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import flask_login
 from google.cloud import compute_v1
 import sqlite3
 import sys
 import hashlib
 import os
+from datetime import timedelta
 
 """App initialisieren"""
 
 app = Flask(__name__)
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.refresh_view = 'relogin'
+login_manager.needs_refresh_message = (u"Sitzung abgleaufen, bitte erneut einloggen")
+login_manager.needs_refresh_message_category = "info"
+
 app.secret_key = 'super secret string'  # Change this!
+
+@app.before_request
+def before_request():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=30)
 
 
 def db_connection():
@@ -175,7 +186,6 @@ def index():
 def template_site():
     """Anzeigefunktion für alle Maschinentemplates.
        Login: erforderlich"""
-
     if request.method == 'POST':
         print(request.form.get("template"))
         if create_instance_form_template(name=request.form.get("name"), template=request.form.get("template")) \
@@ -348,7 +358,7 @@ def list_all_templates(projekt="prj-kloos"):
 def create_instance_form_template(name: str, template: str, projekt="prj-kloos"):
     """Funktion zum erstellen einer Instanz.
        Parameter:
-            template:
+            name: Name der zuerstellenden Instanz
             template: String, der Name der Vorlage, die verwendet werden soll
             projekt: String, der Name des Projektes in dem erstellt werden soll(default: prj-kloos)
        Return: Die erstellte instanz
