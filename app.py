@@ -189,8 +189,8 @@ def template_site():
     zone_dict = list_all_zones()
     if request.method == 'POST':
         print(request.form.get("template"))
-        if create_instance_form_template(name=request.form.get("name"), template=request.form.get("template")) \
-                == "existiert bereits":
+        if create_instance_form_template(name=request.form.get("name"), template=request.form.get("template"),
+                                         zone=request.form.get("zone")) == "existiert bereits":
             return "existiert bereits"
         return redirect("/machines")
         # return request.form.get("name")
@@ -264,8 +264,13 @@ def list_all_zones(projekt:str="prj-kloos"):
             zone_dict[responce.name.split("-")[0]] = [responce.name]
         else:
             zone_dict[responce.name.split("-")[0]].append(responce.name)
-    print(zone_dict)
-    return zone_dict
+
+    for region in zone_dict.keys():
+        zone_dict[region] = sorted(zone_dict[region])
+    sorted_dict = {}
+    for elem in sorted(zone_dict.items()):
+        sorted_dict[elem[0]] = zone_dict[elem[0]]
+    return sorted_dict
 
 def start_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
     """Funktion zum Starten einer Instanz
@@ -376,11 +381,12 @@ def list_all_templates(projekt="prj-kloos"):
     return templates
 
 
-def create_instance_form_template(name: str, template: str, projekt="prj-kloos"):
+def create_instance_form_template(name: str, template: str, zone: str="europe-west3-b", projekt="prj-kloos"):
     """Funktion zum erstellen einer Instanz.
        Parameter:
             name: Name der zuerstellenden Instanz
             template: String, der Name der Vorlage, die verwendet werden soll
+            zone: Die gewünschte zone
             projekt: String, der Name des Projektes in dem erstellt werden soll(default: prj-kloos)
        Return: Die erstellte instanz
        """
@@ -403,12 +409,12 @@ def create_instance_form_template(name: str, template: str, projekt="prj-kloos")
     create_request.instance_resource = instance
     create_request.project = projekt
     create_request.source_instance_template = template_str
-    create_request.zone = "europe-west3-b"
+    create_request.zone = zone
 
     operation = instance_client.insert_unary(request=create_request)
     while operation.status != compute_v1.Operation.Status.DONE:
         operation = operation_client.wait(
-            operation=operation.name, zone="europe-west3-b", project="prj-kloos"
+            operation=operation.name, zone=zone, project="prj-kloos"
         )
     if operation.error:
         print("Error during creation:", operation.error, file=sys.stderr)
