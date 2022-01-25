@@ -7,11 +7,12 @@
 <body>
     {% block content %}
     <div class="login">
-        <form action='login' method='POST'>
-            <input type='text' name='name'  placeholder='Name'/>
-            <input type='password' name='password'  placeholder='Passwort'/>
+        <form action='login' method='POST' autocomplete="off">
+            <input type='text' name='name'  placeholder='Name' required/>
+            <input type='password' name='password'  placeholder='Passwort' required/>
             <input type='submit' name='submit'/>
         </form>
+        <div><a>{{msg}}</a></div>
         <div class="register">
             <a class="block" title="Registrieren" href="{{ url_for('register') }}" class="active">
                     <img class="menuicon" src="{{url_for('static', filename='registration.svg')}}" alt="Registrieren">

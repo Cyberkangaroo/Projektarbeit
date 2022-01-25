@@ -78,6 +78,7 @@ def request_loader(request):
 def login():
     """Anzeigefunktion für die Loginseite / Funktion zum Einloggen"""
 
+    msg = ""
     if request.method == 'GET':
         return render_template('login.html')
 
@@ -104,7 +105,7 @@ def login():
         flask_login.login_user(user)
         return redirect(url_for('index'))
 
-    return "Bad login"
+    return render_template("login.html", msg="Nutzername oder Passwort inkorrekt")
 
 
 @app.route('/logout')
@@ -125,15 +126,19 @@ def unauthorized_handler():
 def register():
     """Anzeigefunktion für die Registerseite.
        """
+    password_regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$"
 
     msg = ''
 
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and \
+            re.match(password_regex, request.form.get('password')):
         name = request.form['username']
         password = request.form['password']
         msg = createaccount(name, password)
-    elif request.method == 'POST':
+    elif request.method == 'POST' and re.match(password_regex, request.form.get('password')):
         msg = 'Füll bitte das Formular aus!'
+    elif request.method == 'POST' and 'password' in request.form:
+        msg = "Das Passwort muss mindestens 8 Zeichen lang sein, mindestens einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten "
 
     return render_template('register.html', msg=msg)
 
@@ -274,6 +279,7 @@ def list_all_zones(projekt:str="prj-kloos"):
 
     zone_dict = {}
     for responce in zone_client.list(zone_request):
+        print(responce)
         if responce.name.split("-")[0] not in zone_dict.keys():
             zone_dict[responce.name.split("-")[0]] = [responce.name]
         else:
