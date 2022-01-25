@@ -7,6 +7,7 @@ import hashlib
 import os
 from datetime import timedelta
 import re
+import mashines
 
 """App initialisieren"""
 
@@ -19,6 +20,7 @@ login_manager.needs_refresh_message = (u"Sitzung abgleaufen, bitte erneut einlog
 login_manager.needs_refresh_message_category = "info"
 
 app.secret_key = 'super secret string'  # Change this!
+
 
 @app.before_request
 def before_request():
@@ -189,7 +191,7 @@ def index():
 
 @app.route("/templates", methods=['GET', 'POST'])
 @flask_login.login_required
-def template_site(msg:str=""):
+def template_site(msg: str = ""):
     """Anzeigefunktion für alle Maschinentemplates.
        Login: erforderlich"""
     zone_dict = list_all_zones()
@@ -199,8 +201,8 @@ def template_site(msg:str=""):
             return render_template("templates.html", templates=templates, zone_dict=zone_dict,
                                    msg="Ungültiger Maschinenname: Der erste Buchstabe muss klein sein!")
         print(request.form.get("template"))
-        if create_instance_form_template(name=request.form.get("name"), template=request.form.get("template"),
-                                         zone=request.form.get("zone")) == "existiert bereits":
+        if mashines.create_instance_form_template(name=request.form.get("name"), template=request.form.get("template"),
+                                                  zone=request.form.get("zone")) == "existiert bereits":
             return render_template("templates.html", templates=templates, zone_dict=zone_dict,
                                    msg="Eine Instanz mit diesem Namen existiert bereits")
         return redirect("/machines")
@@ -216,21 +218,21 @@ def machines_site():
        Login: erforderlich"""
 
     if request.method == 'POST':
-        maschinen = list_all_instance()
+        maschinen = mashines.list_all_instance()
         if "starten" in request.form:
             maschine = [m for m in maschinen if m["name"] == request.form.get("starten")][0]
-            start_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
+            mashines.start_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
             return redirect(url_for('machines_site'))
         elif "stoppen" in request.form:
             maschine = [m for m in maschinen if m["name"] == request.form.get("stoppen")][0]
-            stop_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
+            mashines.stop_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
             return redirect(url_for('machines_site'))
         elif "löschen" in request.form:
             maschine = [m for m in maschinen if m["name"] == request.form.get("löschen")][0]
-            delete_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
+            mashines.delete_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
             return redirect(url_for('machines_site'))
     elif request.method == 'GET':
-        machines = list_all_instance()
+        machines = mashines.list_all_instance()
         user_mashines = [m for m in machines if m["name"].split("-")[-1] == flask_login.current_user.id]
         return render_template("machines.html", machines=user_mashines)
 
@@ -238,35 +240,17 @@ def machines_site():
 @app.route("/create_template", methods=['GET', 'POST'])
 @flask_login.login_required
 def create_template_site():
+    # image_dict = {}
+    # image_dict["debian"] = list_all_images("debian-cloud")
+    # print(len(image_dict["debian"]))
+    images = [maschine["name"] for maschine in mashines.list_all_instance(projekt="prj-kloos")]
     if request.method == 'POST':
         return "post"
     else:
-        return render_template("create_template.html")
+        return render_template("create_template.html", images=images)
 
 
-def list_all_instance(projekt="prj-kloos"):
-    """Funktion zum finden aller Instanzen.
-       Parameter:
-            projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
-       Return: Liste der Instanzen
-       """
-
-    instance_client = compute_v1.InstancesClient()
-    instance_request = compute_v1.AggregatedListInstancesRequest()
-    instance_request.project = projekt
-    agg_list = instance_client.aggregated_list(request=instance_request)
-    machines = []
-
-    for zone, response in agg_list:
-        if response.instances:
-            for instance in response.instances:
-                machine = {"name": instance.name, "ip": instance.network_interfaces[0].access_configs[0].nat_i_p,
-                           "status": instance.status, "zone": zone}
-                machines.append(machine)
-    return machines
-
-
-def list_all_zones(projekt:str="prj-kloos"):
+def list_all_zones(projekt: str = "prj-kloos"):
     """Funktion zum auflisten aller Verfügbaren Zonen
        :parameter: projekt: Das ausgewählte Projekt
        :returns: Verfügbare Zonen: Dict{List[]}
@@ -291,80 +275,6 @@ def list_all_zones(projekt:str="prj-kloos"):
     for elem in sorted(zone_dict.items()):
         sorted_dict[elem[0]] = zone_dict[elem[0]]
     return sorted_dict
-
-def start_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
-    """Funktion zum Starten einer Instanz
-       Parameter:
-            zone: String, die zone in der sich die Instanz befindet
-            instance_name: String, der Name der Instanz
-            projekt: String der Name des Projektes
-            """
-    instance_client = compute_v1.InstancesClient()
-
-    instance = compute_v1.Instance()
-    instance.name = instance_name
-    instance.zone = zone.split("/")[1]
-
-    start_request = compute_v1.types.StartInstanceRequest()
-    start_request.instance = instance.name
-    start_request.project = project_id
-    start_request.zone = instance.zone
-
-    instance_client.start_unary(
-        request=start_request
-    )
-
-    return redirect("/mashines")
-
-
-def stop_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
-    """Funktion zum Stoppen einer Instanz
-       Parameter:
-            zone: String, die zone in der sich die Instanz befindet
-            instance_name: String, der Name der Instanz
-            projekt: String der Name des Projektes
-            """
-
-    instance_client = compute_v1.InstancesClient()
-
-    instance = compute_v1.Instance()
-    instance.name = instance_name
-    instance.zone = zone.split("/")[1]
-
-    stopp_request = compute_v1.types.StopInstanceRequest()
-    stopp_request.instance = instance.name
-    stopp_request.project = project_id
-    stopp_request.zone = instance.zone
-
-    instance_client.stop_unary(
-        request=stopp_request
-    )
-    return redirect("/mashines")
-
-
-def delete_instance(zone: str, instance_name: str, project_id: str = "prj-kloos"):
-    """Funktion zum Löschen einer Instanz
-       Parameter:
-            zone: String, die zone in der sich die Instanz befindet
-            instance_name: String, der Name der Instanz
-            projekt: String der Name des Projektes
-            """
-
-    instance_client = compute_v1.InstancesClient()
-
-    instance = compute_v1.Instance()
-    instance.name = instance_name
-    instance.zone = zone.split("/")[1]
-
-    delete_request = compute_v1.types.DeleteInstanceRequest()
-    delete_request.instance = instance.name
-    delete_request.project = project_id
-    delete_request.zone = instance.zone
-
-    instance_client.delete_unary(
-        request=delete_request
-    )
-    return redirect("/mashines")
 
 
 def list_all_images(projekt="prj-kloos"):
@@ -399,49 +309,6 @@ def list_all_templates(projekt="prj-kloos"):
     for response in temp_list:
         templates.append(response.name)
     return templates
-
-
-def create_instance_form_template(name: str, template: str, zone: str="europe-west3-b", projekt="prj-kloos"):
-    """Funktion zum erstellen einer Instanz.
-       Parameter:
-            name: Name der zuerstellenden Instanz
-            template: String, der Name der Vorlage, die verwendet werden soll
-            zone: Die gewünschte zone
-            projekt: String, der Name des Projektes in dem erstellt werden soll(default: prj-kloos)
-       Return: Die erstellte instanz
-       """
-
-    instance_client = compute_v1.InstancesClient()
-    operation_client = compute_v1.ZoneOperationsClient()
-
-    template_str = "projects/prj-kloos/global/instanceTemplates/" + template
-
-    instance = compute_v1.Instance()
-
-    name = name + "-" + flask_login.current_user.id
-
-    for machine in list_all_instance():
-        if machine["name"] == name:
-            return "existiert bereits"
-
-    instance.name = name
-    create_request = compute_v1.InsertInstanceRequest()
-    create_request.instance_resource = instance
-    create_request.project = projekt
-    create_request.source_instance_template = template_str
-    create_request.zone = zone
-
-    operation = instance_client.insert_unary(request=create_request)
-    while operation.status != compute_v1.Operation.Status.DONE:
-        operation = operation_client.wait(
-            operation=operation.name, zone=zone, project="prj-kloos"
-        )
-    if operation.error:
-        print("Error during creation:", operation.error, file=sys.stderr)
-    if operation.warnings:
-        print("Warning during creation:", operation.warnings, file=sys.stderr)
-    print(f"Instance {instance.name} created.")
-    return instance
 
 
 app.run(debug=True)
