@@ -6,6 +6,7 @@ import sys
 import hashlib
 import os
 from datetime import timedelta
+import re
 
 """App initialisieren"""
 
@@ -183,20 +184,24 @@ def index():
 
 @app.route("/templates", methods=['GET', 'POST'])
 @flask_login.login_required
-def template_site():
+def template_site(msg:str=""):
     """Anzeigefunktion für alle Maschinentemplates.
        Login: erforderlich"""
     zone_dict = list_all_zones()
+    templates = list_all_templates()
     if request.method == 'POST':
+        if not re.match('(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)', request.form.get("name")):
+            return render_template("templates.html", templates=templates, zone_dict=zone_dict,
+                                   msg="Ungültiger Maschinenname: Der erste Buchstabe muss klein sein!")
         print(request.form.get("template"))
         if create_instance_form_template(name=request.form.get("name"), template=request.form.get("template"),
                                          zone=request.form.get("zone")) == "existiert bereits":
-            return "existiert bereits"
+            return render_template("templates.html", templates=templates, zone_dict=zone_dict,
+                                   msg="Eine Instanz mit diesem Namen existiert bereits")
         return redirect("/machines")
         # return request.form.get("name")
     elif request.method == 'GET':
-        templates = list_all_templates()
-        return render_template("templates.html", templates=templates, zone_dict=zone_dict)
+        return render_template("templates.html", templates=templates, zone_dict=zone_dict, msg=msg)
 
 
 @app.route("/machines", methods=['GET', 'POST'])
@@ -223,6 +228,15 @@ def machines_site():
         machines = list_all_instance()
         user_mashines = [m for m in machines if m["name"].split("-")[-1] == flask_login.current_user.id]
         return render_template("machines.html", machines=user_mashines)
+
+
+@app.route("/create_template", methods=['GET', 'POST'])
+@flask_login.login_required
+def create_template_site():
+    if request.method == 'POST':
+        return "post"
+    else:
+        return render_template("create_template.html")
 
 
 def list_all_instance(projekt="prj-kloos"):

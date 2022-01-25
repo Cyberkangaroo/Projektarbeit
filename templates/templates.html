@@ -28,22 +28,13 @@
                     {% endfor %}
                 </select>
                 <button type="submit" name="vm_errstellen" value="VM Erstellen">VM Erstellen</button>
+                <a>{{msg}}</a>
             </div>
     </form>
+    <button type="button" value="template_erstellen" name="template_erstellen"><a href="/create_template">Template erstellen</a></button>
 </div>
 {% endblock %}
-<form method="post" action="/templates">
-    <table>
-        <tr>
-            <th>Image</th>
-        </tr>
-        <tr>
-            {% for t in templates %}
-            <td>{{t}} <button type="submit" name="vm_erstellen" value={{t}}>VM erstellen</button></td>
-            {% endfor %}
-        </tr>
-    </table>
-</form>
+
 
 
 
