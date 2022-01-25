@@ -311,4 +311,4 @@ def list_all_templates(projekt="prj-kloos"):
     return templates
 
 
-app.run(debug=True)
+app.run(debug=True, host="0.0.0.0")
