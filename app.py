@@ -247,7 +247,8 @@ def create_template_site():
     if request.method == 'POST':
         name = request.form.get("name")
         instance = request.form.get("image")
-        create_template(name=name, source_instance=instance)
+        if create_template(name=name, source_instance=instance) == "existiert bereits":
+            return render_template("create_template.html",images=images, msg="vorlage existiert bereits")
         return redirect("/templates")
     else:
         return render_template("create_template.html", images=images)
@@ -316,14 +317,19 @@ def list_all_templates(projekt="prj-kloos"):
 def create_template(source_instance:str, name:str):
     """Funktion zum Erstellen von Maschinen-Vorlagen
        :parameter"""
+
+    print(list_all_templates())
+    for t in list_all_templates():
+        if name == t:
+            return "existiert bereits"
+            # return render_template("create_template.html", msg="Vorlage existiert bereits!")
+
     template_client = compute_v1.InstanceTemplatesClient()
     template_request = compute_v1.InsertInstanceTemplateRequest()
     template_request.project = "prj-kloos"
-    print(source_instance)
     instance_list = mashines.list_all_instance()
     instance = {}
     for i in instance_list:
-        print(i)
         if i["name"] == source_instance:
             instance = i
 
@@ -346,6 +352,6 @@ def create_template(source_instance:str, name:str):
     template_request.instance_template_resource = template
     #
     template_client.insert_unary(request=template_request)
-
+    return None
 
 app.run(debug=True, host="0.0.0.0")
