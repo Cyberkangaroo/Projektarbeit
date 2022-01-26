@@ -11,9 +11,11 @@
                     <a>Quellinstanz auswählen:</a>
                     <select name="image" id="image">
                         {% for image in images %}
-                        <option value="test">{{image}}</option>
+                        <option value="{{image}}">{{image}}</option>
                         {% endfor %}
                     </select>
+                    <a>Name:</a>
+                    <input type="text" name="name" id="name" placeholder="Name" autocomplete="off">
                     <button type="submit" name="erstellen" value="Erstellen">Template erstellen</button>
                 </form>
             </div>

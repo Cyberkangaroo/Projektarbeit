@@ -245,7 +245,10 @@ def create_template_site():
     # print(len(image_dict["debian"]))
     images = [maschine["name"] for maschine in mashines.list_all_instance(projekt="prj-kloos")]
     if request.method == 'POST':
-        return "post"
+        name = request.form.get("name")
+        instance = request.form.get("image")
+        create_template(name=name, source_instance=instance)
+        return redirect("/templates")
     else:
         return render_template("create_template.html", images=images)
 
@@ -263,7 +266,6 @@ def list_all_zones(projekt: str = "prj-kloos"):
 
     zone_dict = {}
     for responce in zone_client.list(zone_request):
-        print(responce)
         if responce.name.split("-")[0] not in zone_dict.keys():
             zone_dict[responce.name.split("-")[0]] = [responce.name]
         else:
@@ -274,7 +276,7 @@ def list_all_zones(projekt: str = "prj-kloos"):
     sorted_dict = {}
     for elem in sorted(zone_dict.items()):
         sorted_dict[elem[0]] = zone_dict[elem[0]]
-    return sorted_dict
+    return sorted_dict["europe"]
 
 
 def list_all_images(projekt="prj-kloos"):
@@ -295,7 +297,7 @@ def list_all_images(projekt="prj-kloos"):
 
 
 def list_all_templates(projekt="prj-kloos"):
-    """Funktion zum finden aller Machin-Templates.
+    """Funktion zum finden aller Machine-Templates.
        Parameter:
             projekt: String, der Name des Projektes in dem gesucht werden soll(default: prj-kloos)
        Return: Liste der Templatenamen
@@ -309,6 +311,41 @@ def list_all_templates(projekt="prj-kloos"):
     for response in temp_list:
         templates.append(response.name)
     return templates
+
+
+def create_template(source_instance:str, name:str):
+    """Funktion zum Erstellen von Maschinen-Vorlagen
+       :parameter"""
+    template_client = compute_v1.InstanceTemplatesClient()
+    template_request = compute_v1.InsertInstanceTemplateRequest()
+    template_request.project = "prj-kloos"
+    print(source_instance)
+    instance_list = mashines.list_all_instance()
+    instance = {}
+    for i in instance_list:
+        print(i)
+        if i["name"] == source_instance:
+            instance = i
+
+    instance_client = compute_v1.InstancesClient()
+    instance_request = compute_v1.GetInstanceRequest()
+
+    print(instance)
+    instance_request.instance = instance["name"]
+    instance_request.zone = instance["zone"].split("/")[1]
+    instance_request.project = "prj-kloos"
+
+    instance = instance_client.get(request=instance_request)
+    # print(instance)
+
+    template = compute_v1.InstanceTemplate()
+    template.source_instance = instance.self_link
+    template.name = name
+
+    # request.source_instance_template = template.name
+    template_request.instance_template_resource = template
+    #
+    template_client.insert_unary(request=template_request)
 
 
 app.run(debug=True, host="0.0.0.0")
