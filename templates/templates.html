@@ -10,15 +10,15 @@
         <p>Bitte eine Vorlage auswählen</p>
             {% for t in templates %}
                 <div>
-                    <input type="radio" name="template" value="{{t}}" id="{{t}}">
+                    <input type="radio" name="template" value="{{t}}" id="{{t}}" required>
                     <label for="{{t}}">{{t}}</label>
                 </div>
             {% endfor %}
             <div>
                 <p>Bitte einen Namen eingeben (Die Benutzerkennung wird automatisch angehangen)</p>
-                <input type="text" name="name" id="name" placeholder="VM Name">
+                <input type="text" name="name" id="name" placeholder="VM Name" required>
                 <label for="zone">Zone auswählen:</label>
-                <select name="zone" id="zone">
+                <select name="zone" id="zone" required>
                         <optgroup label="Europe">
                             {% for zone in zone_dict%}
                                 <option value="{{zone}}">{{zone}}</option>
