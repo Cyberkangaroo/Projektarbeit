@@ -9,12 +9,6 @@
     justify-content: center;
 }
 
-.logo{
-    flex-grow: 2;
-    order: 1;
-    min-width: 9%;
-    max-width: 9%;
-}
 
 .menuicon{
     min-height: 100%;
@@ -119,29 +113,11 @@ h1 {
     text-align: center;
 }
 
-footer {
-    text-align: left;
-    background-color: #e1ebf4;
-    height: 2%;
-    flex-shrink: 0;
-}
 
 
 
-.tabellen{
-    display: flex;
-    align-items: flex-end;
-}
 
-.content_links{
-    width: 50%;
-    height: 90%
-}
 
-.content_rechts{
-    height: 90%;
-    width: 50%;
-}
 
 .login_button, .register_button {
     margin-top: 10px;
