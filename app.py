@@ -237,21 +237,21 @@ def machines_site():
         return render_template("machines.html", machines=user_mashines)
 
 
-@app.route("/create_template", methods=['GET', 'POST'])
-@flask_login.login_required
-def create_template_site():
-    # image_dict = {}
-    # image_dict["debian"] = list_all_images("debian-cloud")
-    # print(len(image_dict["debian"]))
-    images = [maschine["name"] for maschine in mashines.list_all_instance(projekt="prj-kloos")]
-    if request.method == 'POST':
-        name = request.form.get("name")
-        instance = request.form.get("image")
-        if create_template(name=name, source_instance=instance) == "existiert bereits":
-            return render_template("create_template.html",images=images, msg="vorlage existiert bereits")
-        return redirect("/templates")
-    else:
-        return render_template("create_template.html", images=images)
+# @app.route("/create_template", methods=['GET', 'POST'])
+# @flask_login.login_required
+# def create_template_site():
+#     # image_dict = {}
+#     # image_dict["debian"] = list_all_images("debian-cloud")
+#     # print(len(image_dict["debian"]))
+#     images = [maschine["name"] for maschine in mashines.list_all_instance(projekt="prj-kloos")]
+#     if request.method == 'POST':
+#         name = request.form.get("name")
+#         instance = request.form.get("image")
+#         if create_template(name=name, source_instance=instance) == "existiert bereits":
+#             return render_template("create_template.html",images=images, msg="vorlage existiert bereits")
+#         return redirect("/templates")
+#     else:
+#         return render_template("create_template.html", images=images)
 
 
 def list_all_zones(projekt: str = "prj-kloos"):
@@ -314,44 +314,44 @@ def list_all_templates(projekt="prj-kloos"):
     return templates
 
 
-def create_template(source_instance:str, name:str):
-    """Funktion zum Erstellen von Maschinen-Vorlagen
-       :parameter"""
-
-    print(list_all_templates())
-    for t in list_all_templates():
-        if name == t:
-            return "existiert bereits"
-            # return render_template("create_template.html", msg="Vorlage existiert bereits!")
-
-    template_client = compute_v1.InstanceTemplatesClient()
-    template_request = compute_v1.InsertInstanceTemplateRequest()
-    template_request.project = "prj-kloos"
-    instance_list = mashines.list_all_instance()
-    instance = {}
-    for i in instance_list:
-        if i["name"] == source_instance:
-            instance = i
-
-    instance_client = compute_v1.InstancesClient()
-    instance_request = compute_v1.GetInstanceRequest()
-
-    print(instance)
-    instance_request.instance = instance["name"]
-    instance_request.zone = instance["zone"].split("/")[1]
-    instance_request.project = "prj-kloos"
-
-    instance = instance_client.get(request=instance_request)
-    # print(instance)
-
-    template = compute_v1.InstanceTemplate()
-    template.source_instance = instance.self_link
-    template.name = name
-
-    # request.source_instance_template = template.name
-    template_request.instance_template_resource = template
-    #
-    template_client.insert_unary(request=template_request)
-    return None
+# def create_template(source_instance:str, name:str):
+#     """Funktion zum Erstellen von Maschinen-Vorlagen
+#        :parameter"""
+#
+#     print(list_all_templates())
+#     for t in list_all_templates():
+#         if name == t:
+#             return "existiert bereits"
+#             # return render_template("create_template.html", msg="Vorlage existiert bereits!")
+#
+#     template_client = compute_v1.InstanceTemplatesClient()
+#     template_request = compute_v1.InsertInstanceTemplateRequest()
+#     template_request.project = "prj-kloos"
+#     instance_list = mashines.list_all_instance()
+#     instance = {}
+#     for i in instance_list:
+#         if i["name"] == source_instance:
+#             instance = i
+#
+#     instance_client = compute_v1.InstancesClient()
+#     instance_request = compute_v1.GetInstanceRequest()
+#
+#     print(instance)
+#     instance_request.instance = instance["name"]
+#     instance_request.zone = instance["zone"].split("/")[1]
+#     instance_request.project = "prj-kloos"
+#
+#     instance = instance_client.get(request=instance_request)
+#     # print(instance)
+#
+#     template = compute_v1.InstanceTemplate()
+#     template.source_instance = instance.self_link
+#     template.name = name
+#
+#     # request.source_instance_template = template.name
+#     template_request.instance_template_resource = template
+#     #
+#     template_client.insert_unary(request=template_request)
+#     return None
 
 app.run(debug=True, host="0.0.0.0")
