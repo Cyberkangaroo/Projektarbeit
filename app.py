@@ -2,12 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import flask_login
 from google.cloud import compute_v1
 import sqlite3
-import sys
 import hashlib
 import os
 from datetime import timedelta
 import re
-import mashines
+import machines
 
 """App initialisieren"""
 
@@ -128,7 +127,7 @@ def unauthorized_handler():
 def register():
     """Anzeigefunktion für die Registerseite.
        """
-    password_regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$"
+    password_regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_])[A-Za-z\d@$!%*?&_]{8,}$"
 
     msg = ''
 
@@ -137,10 +136,11 @@ def register():
         name = request.form['username']
         password = request.form['password']
         msg = createaccount(name, password)
-    elif request.method == 'POST' and re.match(password_regex, request.form.get('password')):
-        msg = 'Füll bitte das Formular aus!'
+    # elif request.method == 'POST': #
+    #     print(request.form.get("password"))
+    #     msg = 'Füll bitte das Formular aus!'
     elif request.method == 'POST' and 'password' in request.form:
-        msg = "Das Passwort muss mindestens 8 Zeichen lang sein, mindestens einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten "
+        msg = "Das Passwort muss mindestens 8 Zeichen lang sein, mindestens einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und eins dieser Zeichen enthalten [@$!%*?&_]"
 
     return render_template('register.html', msg=msg)
 
@@ -201,7 +201,7 @@ def template_site(msg: str = ""):
             return render_template("templates.html", templates=templates, zone_dict=zone_dict,
                                    msg="Ungültiger Maschinenname: Der erste Buchstabe muss klein sein!")
         print(request.form.get("template"))
-        if mashines.create_instance_form_template(name=request.form.get("name"), template=request.form.get("template"),
+        if machines.create_instance_form_template(name=request.form.get("name"), template=request.form.get("template"),
                                                   zone=request.form.get("zone")) == "existiert bereits":
             return render_template("templates.html", templates=templates, zone_dict=zone_dict,
                                    msg="Eine Instanz mit diesem Namen existiert bereits")
@@ -218,23 +218,23 @@ def machines_site():
        Login: erforderlich"""
 
     if request.method == 'POST':
-        maschinen = mashines.list_all_instance()
+        maschinen = machines.list_all_instance()
         if "starten" in request.form:
             maschine = [m for m in maschinen if m["name"] == request.form.get("starten")][0]
-            mashines.start_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
+            machines.start_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
             return redirect(url_for('machines_site'))
         elif "stoppen" in request.form:
             maschine = [m for m in maschinen if m["name"] == request.form.get("stoppen")][0]
-            mashines.stop_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
+            machines.stop_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
             return redirect(url_for('machines_site'))
         elif "löschen" in request.form:
             maschine = [m for m in maschinen if m["name"] == request.form.get("löschen")][0]
-            mashines.delete_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
+            machines.delete_instance(zone=maschine["zone"], instance_name=maschine["name"], project_id="prj-kloos")
             return redirect(url_for('machines_site'))
     elif request.method == 'GET':
-        machines = mashines.list_all_instance()
-        user_mashines = [m for m in machines if m["name"].split("-")[-1] == flask_login.current_user.id]
-        return render_template("machines.html", machines=user_mashines)
+        maschinen = machines.list_all_instance()
+        user_machines = [m for m in maschinen if m["name"].split("-")[-1] == flask_login.current_user.id]
+        return render_template("machines.html", machines=user_machines)
 
 
 # @app.route("/create_template", methods=['GET', 'POST'])
