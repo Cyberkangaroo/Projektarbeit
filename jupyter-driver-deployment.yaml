@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: jupyter-spark
+  name: jupyter-spark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jupyter-spark
+  template:
+    metadata:
+      labels:
+        app: jupyter-spark
+    spec:
+      serviceAccountName: spark-driver
+      securityContext:
+        fsGroup: 777
+      containers:
+      - name: spark-notebook
+        image: joklo002/projektarbeit:spark-k8s-jupyter
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsUser: 0
+        ports:
+          - containerPort: 8888
+        env:
+          - name: VOLUME
+            value: "/home/jovyan/.jupyter"
+        volumeMounts:
+          - mountPath: "/home/jovyan"
+            name: jupyter-vol
+        workingDir: /home/jovyan
+        resources:
+          limits:
+            memory: 2Gi
+        command: ["jupyter", "notebook", "--ip", "0.0.0.0", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''"]
+      volumes:
+        - name: jupyter-vol
+          persistentVolumeClaim:
+            claimName: jupyter-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jupyter-notebook-deployment
+spec:
+  selector:
+    app: jupyter-notebook
+  ports:
+    - protocol: TCP
+      port: 29413
+  clusterIP: 10.96.0.2
