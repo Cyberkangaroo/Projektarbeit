@@ -1,0 +1,12 @@
+[Unit]
+Description=Runs minikube on startup
+After=vboxautostart-service.service vboxballoonctrl-service.service vboxdrv.service vboxweb-service.service
+[Service]
+Type=simple
+User=michaelekloos
+RemainAfterExit=yes
+ExecStart=/home/michaelekloos/minikube start -p test
+Restart=on-failure
+RestartSec=10
+[Install]
+WantedBy=multi-user.target

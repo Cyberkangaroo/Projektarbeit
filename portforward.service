@@ -1,0 +1,12 @@
+[Unit]
+Description=Forwardes port to dockercontainer
+After=minikube.service
+[Service]
+Type=simple
+User=michaelekloos
+RemainAfterExit=yes
+ExecStart=/usr/bin/kubectl port-forward --address 0.0.0.0 deployment/jupyter-spark 8888
+Restart=on-failure
+RestartSec=10
+[Install]
+WantedBy=multi-user.target
