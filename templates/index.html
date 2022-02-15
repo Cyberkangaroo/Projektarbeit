@@ -1,12 +1,18 @@
 <!DOCTYPE html>
 {% extends "layout.html" %}
 {% block head %}
-    {{ super() }}
+{{ super() }}
 {% endblock %}
 
 {%block content %}
 <div class="index">
-
+    <h1>Herzlich Wilkommen!</h1>
+    <p>Dieses Webinterface entstand im Rahmen einer Projektarbeit und soll Studierenden die Möglichkeit geben anhand
+        von Vorlagen virtuelle Maschinen auf Der Google Cloud zuerstellen und diese Für Praktika zu nutzen.</p>
+    <p>Das Interface besteht grundlegent aus zwei Komponenten. Die Template-Seite zeigt alle zuverfügung stehenden
+        Vorlagen an und bietet die Möglich keit zum erstellen von neuen Maschinen. Die Maschinen-Seite listet alle zum
+        aktuellen Natzer gehörenden Maschinen an und bietet die Möglichkeit diese zu verwalten.</p>
+    <p>Die Maschinen werden nach längerer Inaktivität aus Kostengründen automatisch heruntergefahren.</p>
 </div>
 {% endblock %}
 

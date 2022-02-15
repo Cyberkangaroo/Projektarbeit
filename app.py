@@ -89,15 +89,18 @@ def login():
         dict(name=row[0], password=row[1], salt=row[2]) for row in cursor.fetchall()
     ]
 
+    if len(users) == 0:
+        return render_template("login.html", msg="Dieser Nutzer existiert nicht!")
+
     name = request.form['name']
     password = request.form['password']
 
     key = hashlib.pbkdf2_hmac(
-        'sha256',  # The hash digest algorithm for HMAC
-        password.encode('utf-8'),  # Convert the password to bytes
-        users[0]['salt'],  # Provide the salt
-        100000,  # It is recommended to use at least 100,000 iterations of SHA-256
-        dklen=128  # Get a 128 byte key
+        'sha256',
+        password.encode('utf-8'),
+        users[0]['salt'],
+        100000,
+        dklen=128
     )
 
     if key == users[0]['password']:
@@ -166,11 +169,11 @@ def createaccount(name, password):
         # generiert salt
         salt = os.urandom(32)
         key = hashlib.pbkdf2_hmac(
-            'sha256',  # The hash digest algorithm for HMAC
-            password.encode('utf-8'),  # Convert the password to bytes
-            salt,  # Provide the salt
-            100000,  # It is recommended to use at least 100,000 iterations of SHA-256
-            dklen=128  # Get a 128 byte key
+            'sha256',
+            password.encode('utf-8'),
+            salt,
+            100000,
+            dklen=128
         )
         cursor.execute('INSERT INTO user(name, password, salt) VALUES (?, ?, ?)',
                        (name, key, salt,))
